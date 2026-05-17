@@ -39,7 +39,7 @@ async function loadReport() {
         setMention(reportMentionItems[idx]);
         switchTab('form');
       });
-      el.appendChild(btn);
+      el.querySelector('.mr-item-header').appendChild(btn);
     });
 
     container.innerHTML = '';
@@ -64,19 +64,38 @@ function markdownToHtml(md) {
   let currentSection = '';
   let idx = 0;
   const items = [];
+  let openItem = false;
+
+  function closeItem() {
+    if (openItem) { html += '</div>'; openItem = false; }
+  }
 
   for (const line of lines) {
-    if (line.startsWith('# '))       html += `<h2 class="mr-title">${esc(line.slice(2))}</h2>`;
-    else if (line.startsWith('## ')) { currentSection = line.slice(3).trim(); html += `<h3 class="mr-cat">${esc(currentSection)}</h3>`; }
-    else if (line.startsWith('> '))  html += `<p class="mr-summary">${esc(line.slice(2))}</p>`;
-    else if (line.startsWith('- '))  {
-      const title = line.slice(2).replace(/^\S+\s/, '').trim(); // strip emoji prefix
+    if (line.startsWith('# ')) {
+      closeItem();
+      html += `<h2 class="mr-title">${esc(line.slice(2))}</h2>`;
+    } else if (line.startsWith('## ')) {
+      closeItem();
+      currentSection = line.slice(3).trim();
+      html += `<h3 class="mr-cat">${esc(currentSection)}</h3>`;
+    } else if (line.startsWith('> ')) {
+      closeItem();
+      html += `<p class="mr-summary">${esc(line.slice(2))}</p>`;
+    } else if (line.startsWith('- ')) {
+      closeItem();
+      const title = line.slice(2).replace(/^\S+\s/, '').trim();
       items.push({ title, section: currentSection });
-      html += `<div class="mr-item" data-idx="${idx++}"><span class="mr-item-text">${esc(line.slice(2))}</span></div>`;
+      html += `<div class="mr-item" data-idx="${idx++}"><div class="mr-item-header"><span class="mr-item-text">${esc(line.slice(2))}</span></div>`;
+      openItem = true;
+    } else if (line.startsWith('  *') && openItem) {
+      html += `<span class="mr-detail-text">${esc(line.trim().replace(/\*/g, ''))}</span>`;
+    } else if (line.startsWith('  `') && openItem) {
+      html += `<span class="mr-since">${esc(line.trim().replace(/`/g, ''))}</span>`;
+    } else {
+      closeItem();
     }
-    else if (line.startsWith('  *')) html += `<p class="mr-detail-text">${esc(line.trim().replace(/\*/g, ''))}</p>`;
-    else if (line.startsWith('  `')) html += `<p class="mr-since">${esc(line.trim().replace(/`/g, ''))}</p>`;
   }
+  closeItem();
 
   return { html, items };
 }

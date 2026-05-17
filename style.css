@@ -336,12 +336,18 @@ body {
   padding: 10px 12px;
   margin-bottom: 6px;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
-.mr-item-text { flex: 1; font-size: 0.9rem; line-height: 1.4; }
+.mr-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mr-item-text { flex: 1; font-size: 0.9rem; line-height: 1.4; min-width: 0; }
 
 .mr-mention-btn {
   flex-shrink: 0;
@@ -360,8 +366,19 @@ body {
 
 .mr-mention-btn:active { background: #e8f0fe; color: #007aff; border-color: #007aff; }
 
-.mr-detail-text { font-size: 0.78rem; color: #636366; padding: 0 4px; }
-.mr-since { font-size: 0.72rem; color: #8e8e93; padding: 0 4px; }
+.mr-detail-text {
+  width: 100%;
+  font-size: 0.78rem;
+  color: #636366;
+  padding-left: 2px;
+}
+
+.mr-since {
+  width: 100%;
+  font-size: 0.72rem;
+  color: #8e8e93;
+  padding-left: 2px;
+}
 
 /* ── Edit dropdown ────────────────────────────────────────────────────────────*/
 
