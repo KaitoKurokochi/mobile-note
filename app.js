@@ -102,7 +102,8 @@ function renderForm() {
 
   // Labels
   const labelRow = document.getElementById('label-row');
-  labels.forEach(l => {
+
+  function addLabelPill(l) {
     const pill = document.createElement('button');
     pill.type = 'button';
     pill.className = 'label-pill' + (l === selectedLabel ? ' selected' : '');
@@ -111,8 +112,42 @@ function renderForm() {
       selectedLabel = l;
       labelRow.querySelectorAll('.label-pill').forEach(p => p.classList.toggle('selected', p.textContent === l));
     });
-    labelRow.appendChild(pill);
+    labelRow.insertBefore(pill, labelRow.querySelector('.label-add-btn'));
+  }
+
+  labels.forEach(l => addLabelPill(l));
+
+  // Add label button
+  const addLabelBtn = document.createElement('button');
+  addLabelBtn.type = 'button';
+  addLabelBtn.className = 'label-add-btn';
+  addLabelBtn.textContent = '+';
+  addLabelBtn.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'label-add-input';
+    input.placeholder = '新しいラベル';
+    addLabelBtn.replaceWith(input);
+    input.focus();
+
+    function confirm() {
+      const val = input.value.trim();
+      input.replaceWith(addLabelBtn);
+      if (!val) return;
+      const currentLabels = getLabels();
+      if (currentLabels.includes(val)) return;
+      currentLabels.push(val);
+      localStorage.setItem(LABELS_KEY, JSON.stringify(currentLabels));
+      selectedLabel = val;
+      addLabelPill(val);
+      labelRow.querySelectorAll('.label-pill').forEach(p => p.classList.toggle('selected', p.textContent === val));
+      pushSync();
+    }
+
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); confirm(); } });
+    input.addEventListener('blur', confirm);
   });
+  labelRow.appendChild(addLabelBtn);
 
   // Roles
   const roleRow = document.getElementById('role-row');

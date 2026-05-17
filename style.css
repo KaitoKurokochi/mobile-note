@@ -118,6 +118,25 @@ body {
   font-weight: 600;
 }
 
+.label-add-btn {
+  padding: 7px 12px;
+  border-radius: 20px;
+  border: 1.5px dashed #d1d1d6;
+  background: #fff;
+  font-size: 0.88rem;
+  color: #8e8e93;
+  cursor: pointer;
+}
+
+.label-add-input {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid #007aff;
+  font-size: 0.88rem;
+  width: 120px;
+  outline: none;
+}
+
 /* Role pills */
 .role-row {
   display: flex;

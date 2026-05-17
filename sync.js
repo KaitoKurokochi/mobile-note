@@ -44,3 +44,29 @@ async function pullSync() {
     if (content.roles  !== undefined) localStorage.setItem(ROLES_KEY,  JSON.stringify(content.roles));
   } catch (_) { /* silent */ }
 }
+
+async function pushSync() {
+  if (!getToken()) return;
+  try {
+    // Get current SHA
+    const getRes = await fetch(SYNC_API, { headers: syncHeaders() });
+    let sha = null;
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+      // Merge with existing content to preserve other fields (e.g. groups)
+      const existing = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
+      const payload = {
+        ...existing,
+        labels: getLabels(),
+        roles: getRoles(),
+      };
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2) + '\n')));
+      await fetch(SYNC_API, {
+        method: 'PUT',
+        headers: { ...syncHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'chore: update labels via mobile', content: encoded, sha }),
+      });
+    }
+  } catch (_) { /* silent */ }
+}
