@@ -1,0 +1,46 @@
+// ── Sync: pull labels/roles from my_notes/sync.json ─────────────────────────
+
+const SYNC_OWNER = 'KaitoKurokochi';
+const SYNC_REPO  = 'my_notes';
+const SYNC_FILE  = 'sync.json';
+const SYNC_API   = `https://api.github.com/repos/${SYNC_OWNER}/${SYNC_REPO}/contents/${SYNC_FILE}`;
+
+const TOKEN_KEY     = 'NOTE_TOKEN';
+const LABELS_KEY    = 'note_labels';
+const ROLES_KEY     = 'note_roles';
+const SYNC_SHA_KEY  = 'mypage_sync_sha';
+
+const DEFAULT_LABELS = ['Lions_IS', 'Entertainment', 'Research'];
+const DEFAULT_ROLES  = [
+  { key: 'Memo',       icon: '📝' },
+  { key: 'Todo',       icon: '🔲' },
+  { key: 'Idea',       icon: '💡' },
+  { key: 'Want to do', icon: '⭐' },
+  { key: 'Question',   icon: '❓' },
+  { key: 'Done',       icon: '✅' },
+];
+
+function getToken()  { return localStorage.getItem(TOKEN_KEY) || ''; }
+function getLabels() { return JSON.parse(localStorage.getItem(LABELS_KEY) || JSON.stringify(DEFAULT_LABELS)); }
+function getRoles()  { return JSON.parse(localStorage.getItem(ROLES_KEY)  || JSON.stringify(DEFAULT_ROLES)); }
+
+function syncHeaders() {
+  const t = getToken();
+  return {
+    'Accept': 'application/vnd.github+json',
+    ...(t ? { 'Authorization': `Bearer ${t}` } : {}),
+  };
+}
+
+async function pullSync() {
+  if (!getToken()) return;
+  try {
+    const res = await fetch(SYNC_API, { headers: syncHeaders() });
+    if (!res.ok) return;
+    const data    = await res.json();
+    const content = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
+    localStorage.setItem(SYNC_SHA_KEY, data.sha);
+    if (content.labels !== undefined) localStorage.setItem(LABELS_KEY, JSON.stringify(content.labels));
+    if (content.roles  !== undefined) localStorage.setItem(ROLES_KEY,  JSON.stringify(content.roles));
+  } catch (_) { /* silent */ }
+}
