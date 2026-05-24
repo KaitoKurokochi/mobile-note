@@ -92,7 +92,7 @@ function renderForm() {
         <button type="button" class="mention-clear">✕</button>
       </div>
 
-      <textarea id="note-input" class="note-textarea" placeholder="気づき・タスク・アイデアを書く" rows="5"></textarea>
+      <textarea id="note-input" class="note-textarea" placeholder="Write a note, task, or idea" rows="5"></textarea>
 
       <button type="submit" class="submit-btn">Save</button>
       <p id="form-status" class="form-status"></p>
