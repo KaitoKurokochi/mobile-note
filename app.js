@@ -150,11 +150,11 @@ function renderForm() {
     const header = document.createElement('div');
     header.className = 'label-modal-header';
     const title = document.createElement('span');
-    title.textContent = 'ラベルを管理';
+    title.textContent = 'Manage Labels';
     const doneBtn = document.createElement('button');
     doneBtn.type = 'button';
     doneBtn.className = 'label-modal-done';
-    doneBtn.textContent = '完了';
+    doneBtn.textContent = 'Done';
     doneBtn.addEventListener('click', close);
     header.appendChild(title);
     header.appendChild(doneBtn);
@@ -229,11 +229,11 @@ function renderForm() {
     const addInput = document.createElement('input');
     addInput.type = 'text';
     addInput.className = 'label-modal-add-input';
-    addInput.placeholder = '新しいラベル';
+    addInput.placeholder = 'New label';
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.className = 'label-modal-add-btn';
-    addBtn.textContent = '追加';
+    addBtn.textContent = 'Add';
 
     function addLabel() {
       const val = addInput.value.trim();
