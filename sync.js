@@ -10,7 +10,10 @@ const LABELS_KEY    = 'note_labels';
 const ROLES_KEY     = 'note_roles';
 const SYNC_SHA_KEY  = 'mypage_sync_sha';
 
-const DEFAULT_LABELS = ['Lions_IS', 'Entertainment', 'Research'];
+const DEFAULT_LABELS = [
+  'Lions_IS', 'Books', 'Research', 'General', 'Softball',
+  'my_home_page', 'Football', 'Agent', 'video_content', 'Others', 'Baseball',
+];
 const DEFAULT_ROLES  = [
   { key: 'Memo',       icon: '📝' },
   { key: 'Todo',       icon: '🔲' },

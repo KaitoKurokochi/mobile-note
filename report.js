@@ -17,6 +17,12 @@ let reportMentionItems = [];
 
 async function loadReport() {
   const container = document.getElementById('report-container');
+
+  if (!getToken()) {
+    container.innerHTML = '<p class="placeholder">トークンが未設定です。Formタブでトークンを設定してください。</p>';
+    return;
+  }
+
   container.innerHTML = '<p class="placeholder">Loading...</p>';
   reportMentionItems = [];
 
@@ -45,9 +51,17 @@ async function loadReport() {
     container.innerHTML = '';
     container.appendChild(div);
   } catch (e) {
-    container.innerHTML = e.status === 404
-      ? '<p class="placeholder">レポートはまだ生成されていません</p>'
-      : `<p class="error-msg">読み込み失敗: ${e.message}</p>`;
+    let msg;
+    if (e.status === 404) {
+      msg = '<p class="placeholder">レポートはまだ生成されていません</p>';
+    } else if (e.status === 403) {
+      msg = '<p class="error-msg">アクセス拒否 (403): PATに <code>Contents: read</code> 権限を追加してください。</p>';
+    } else if (e.status === 401) {
+      msg = '<p class="error-msg">認証エラー (401): トークンが無効です。Formタブでトークンを再設定してください。</p>';
+    } else {
+      msg = `<p class="error-msg">読み込み失敗: ${e.message}</p>`;
+    }
+    container.innerHTML = msg;
   }
 }
 
