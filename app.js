@@ -103,72 +103,15 @@ function renderForm() {
   // Labels
   const labelRow = document.getElementById('label-row');
 
-  function startLabelEdit(pill, currentName) {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'label-pill-edit-input';
-    input.value = currentName;
-    pill.innerHTML = '';
-    pill.appendChild(input);
-    input.focus();
-    input.select();
-
-    function commit() {
-      const val = input.value.trim();
-      if (val && val !== currentName) {
-        const ls = getLabels();
-        const idx = ls.indexOf(currentName);
-        if (idx !== -1) ls[idx] = val;
-        localStorage.setItem(LABELS_KEY, JSON.stringify(ls));
-        if (selectedLabel === currentName) selectedLabel = val;
-        pushSync();
-      }
-      renderForm();
-    }
-
-    input.addEventListener('blur', commit);
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-      if (e.key === 'Escape') { input.removeEventListener('blur', commit); renderForm(); }
-    });
-  }
-
   function addLabelPill(l) {
-    const pill = document.createElement('span');
+    const pill = document.createElement('button');
+    pill.type = 'button';
     pill.className = 'label-pill' + (l === selectedLabel ? ' selected' : '');
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'label-pill-name';
-    nameSpan.textContent = l;
-    nameSpan.addEventListener('click', () => {
+    pill.textContent = l;
+    pill.addEventListener('click', () => {
       selectedLabel = l;
-      labelRow.querySelectorAll('.label-pill').forEach(p =>
-        p.classList.toggle('selected', p.querySelector('.label-pill-name')?.textContent === l)
-      );
+      labelRow.querySelectorAll('.label-pill').forEach(p => p.classList.toggle('selected', p.textContent === l));
     });
-
-    const editBtn = document.createElement('button');
-    editBtn.type = 'button';
-    editBtn.className = 'label-pill-edit';
-    editBtn.textContent = '✎';
-    editBtn.addEventListener('click', e => { e.stopPropagation(); startLabelEdit(pill, l); });
-
-    const delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.className = 'label-pill-delete';
-    delBtn.textContent = '×';
-    delBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const ls = getLabels().filter(x => x !== l);
-      localStorage.setItem(LABELS_KEY, JSON.stringify(ls));
-      if (selectedLabel === l) selectedLabel = ls[0] || null;
-      pushSync();
-      renderForm();
-    });
-
-    pill.appendChild(nameSpan);
-    pill.appendChild(editBtn);
-    pill.appendChild(delBtn);
     labelRow.insertBefore(pill, labelRow.querySelector('.label-add-btn'));
   }
 
@@ -179,31 +122,144 @@ function renderForm() {
   addLabelBtn.type = 'button';
   addLabelBtn.className = 'label-add-btn';
   addLabelBtn.textContent = '+';
-  addLabelBtn.addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'label-add-input';
-    input.placeholder = '新しいラベル';
-    addLabelBtn.replaceWith(input);
-    input.focus();
+  addLabelBtn.addEventListener('click', openLabelModal);
+  labelRow.appendChild(addLabelBtn);
 
-    function confirm() {
-      const val = input.value.trim();
-      input.replaceWith(addLabelBtn);
-      if (!val) return;
-      const currentLabels = getLabels();
-      if (currentLabels.includes(val)) return;
-      currentLabels.push(val);
-      localStorage.setItem(LABELS_KEY, JSON.stringify(currentLabels));
-      selectedLabel = val;
-      renderForm();
+  // Manage labels button
+  const manageBtn = document.createElement('button');
+  manageBtn.type = 'button';
+  manageBtn.className = 'label-manage-btn';
+  manageBtn.textContent = '✎';
+  manageBtn.addEventListener('click', openLabelModal);
+  labelRow.appendChild(manageBtn);
+
+  function openLabelModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'label-modal-overlay';
+
+    const sheet = document.createElement('div');
+    sheet.className = 'label-modal-sheet';
+
+    function close() {
+      overlay.remove();
       pushSync();
+      renderForm();
     }
 
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); confirm(); } });
-    input.addEventListener('blur', confirm);
-  });
-  labelRow.appendChild(addLabelBtn);
+    // Header
+    const header = document.createElement('div');
+    header.className = 'label-modal-header';
+    const title = document.createElement('span');
+    title.textContent = 'ラベルを管理';
+    const doneBtn = document.createElement('button');
+    doneBtn.type = 'button';
+    doneBtn.className = 'label-modal-done';
+    doneBtn.textContent = '完了';
+    doneBtn.addEventListener('click', close);
+    header.appendChild(title);
+    header.appendChild(doneBtn);
+
+    // List
+    const list = document.createElement('ul');
+    list.className = 'label-modal-list';
+
+    function renderList() {
+      list.innerHTML = '';
+      getLabels().forEach((l, idx) => {
+        const item = document.createElement('li');
+        item.className = 'label-modal-item';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'label-modal-name';
+        nameEl.textContent = l;
+
+        const renameBtn = document.createElement('button');
+        renameBtn.type = 'button';
+        renameBtn.className = 'label-modal-rename';
+        renameBtn.textContent = '✎';
+        renameBtn.addEventListener('click', () => {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'label-modal-rename-input';
+          input.value = l;
+          item.replaceChild(input, nameEl);
+          input.focus();
+          input.select();
+
+          function commitRename() {
+            const val = input.value.trim();
+            if (val && val !== l) {
+              const ls = getLabels();
+              ls[idx] = val;
+              localStorage.setItem(LABELS_KEY, JSON.stringify(ls));
+              if (selectedLabel === l) selectedLabel = val;
+            }
+            renderList();
+          }
+          input.addEventListener('blur', commitRename);
+          input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            if (e.key === 'Escape') { input.removeEventListener('blur', commitRename); renderList(); }
+          });
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'label-modal-delete';
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', () => {
+          const ls = getLabels().filter((_, i) => i !== idx);
+          localStorage.setItem(LABELS_KEY, JSON.stringify(ls));
+          if (selectedLabel === l) selectedLabel = ls[0] || null;
+          renderList();
+        });
+
+        item.appendChild(nameEl);
+        item.appendChild(renameBtn);
+        item.appendChild(delBtn);
+        list.appendChild(item);
+      });
+    }
+
+    renderList();
+
+    // Add new label row
+    const addRow = document.createElement('div');
+    addRow.className = 'label-modal-add';
+    const addInput = document.createElement('input');
+    addInput.type = 'text';
+    addInput.className = 'label-modal-add-input';
+    addInput.placeholder = '新しいラベル';
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'label-modal-add-btn';
+    addBtn.textContent = '追加';
+
+    function addLabel() {
+      const val = addInput.value.trim();
+      if (!val) return;
+      const ls = getLabels();
+      if (ls.includes(val)) { addInput.value = ''; return; }
+      ls.push(val);
+      localStorage.setItem(LABELS_KEY, JSON.stringify(ls));
+      selectedLabel = val;
+      addInput.value = '';
+      renderList();
+    }
+
+    addBtn.addEventListener('click', addLabel);
+    addInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addLabel(); } });
+
+    addRow.appendChild(addInput);
+    addRow.appendChild(addBtn);
+
+    sheet.appendChild(header);
+    sheet.appendChild(list);
+    sheet.appendChild(addRow);
+    overlay.appendChild(sheet);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    document.body.appendChild(overlay);
+  }
 
   // Roles
   const roleRow = document.getElementById('role-row');
