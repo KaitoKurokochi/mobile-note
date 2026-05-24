@@ -103,15 +103,72 @@ function renderForm() {
   // Labels
   const labelRow = document.getElementById('label-row');
 
-  function addLabelPill(l) {
-    const pill = document.createElement('button');
-    pill.type = 'button';
-    pill.className = 'label-pill' + (l === selectedLabel ? ' selected' : '');
-    pill.textContent = l;
-    pill.addEventListener('click', () => {
-      selectedLabel = l;
-      labelRow.querySelectorAll('.label-pill').forEach(p => p.classList.toggle('selected', p.textContent === l));
+  function startLabelEdit(pill, currentName) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'label-pill-edit-input';
+    input.value = currentName;
+    pill.innerHTML = '';
+    pill.appendChild(input);
+    input.focus();
+    input.select();
+
+    function commit() {
+      const val = input.value.trim();
+      if (val && val !== currentName) {
+        const ls = getLabels();
+        const idx = ls.indexOf(currentName);
+        if (idx !== -1) ls[idx] = val;
+        localStorage.setItem(LABELS_KEY, JSON.stringify(ls));
+        if (selectedLabel === currentName) selectedLabel = val;
+        pushSync();
+      }
+      renderForm();
+    }
+
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { input.removeEventListener('blur', commit); renderForm(); }
     });
+  }
+
+  function addLabelPill(l) {
+    const pill = document.createElement('span');
+    pill.className = 'label-pill' + (l === selectedLabel ? ' selected' : '');
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'label-pill-name';
+    nameSpan.textContent = l;
+    nameSpan.addEventListener('click', () => {
+      selectedLabel = l;
+      labelRow.querySelectorAll('.label-pill').forEach(p =>
+        p.classList.toggle('selected', p.querySelector('.label-pill-name')?.textContent === l)
+      );
+    });
+
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'label-pill-edit';
+    editBtn.textContent = '✎';
+    editBtn.addEventListener('click', e => { e.stopPropagation(); startLabelEdit(pill, l); });
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'label-pill-delete';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const ls = getLabels().filter(x => x !== l);
+      localStorage.setItem(LABELS_KEY, JSON.stringify(ls));
+      if (selectedLabel === l) selectedLabel = ls[0] || null;
+      pushSync();
+      renderForm();
+    });
+
+    pill.appendChild(nameSpan);
+    pill.appendChild(editBtn);
+    pill.appendChild(delBtn);
     labelRow.insertBefore(pill, labelRow.querySelector('.label-add-btn'));
   }
 
@@ -139,8 +196,7 @@ function renderForm() {
       currentLabels.push(val);
       localStorage.setItem(LABELS_KEY, JSON.stringify(currentLabels));
       selectedLabel = val;
-      addLabelPill(val);
-      labelRow.querySelectorAll('.label-pill').forEach(p => p.classList.toggle('selected', p.textContent === val));
+      renderForm();
       pushSync();
     }
 

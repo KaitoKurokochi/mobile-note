@@ -101,12 +101,14 @@ body {
 }
 
 .label-pill {
-  padding: 7px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px 5px 14px;
   border-radius: 20px;
   border: 1.5px solid #d1d1d6;
   background: #fff;
   font-size: 0.88rem;
-  cursor: pointer;
   transition: all 0.15s;
   user-select: none;
 }
@@ -116,6 +118,40 @@ body {
   background: #e8f0fe;
   color: #007aff;
   font-weight: 600;
+}
+
+.label-pill-name {
+  cursor: pointer;
+}
+
+.label-pill-edit,
+.label-pill-delete {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #8e8e93;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.label-pill:hover .label-pill-edit,
+.label-pill:hover .label-pill-delete {
+  opacity: 1;
+}
+
+.label-pill-delete:hover { color: #ff3b30; }
+.label-pill-edit:hover   { color: #007aff; }
+
+.label-pill-edit-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.88rem;
+  width: 90px;
+  color: inherit;
 }
 
 .label-add-btn {
