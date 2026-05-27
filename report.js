@@ -86,6 +86,8 @@ function markdownToHtml(md) {
       tokens.push({ type: 'h1', text: line.slice(2).trim() });
     } else if (line.startsWith('> ')) {
       tokens.push({ type: 'summary', text: line.slice(2).trim() });
+    } else if (line.startsWith('- [ ] ') || line.startsWith('- [x] ')) {
+      tokens.push({ type: 'check', text: line.slice(6).trim(), checked: line.startsWith('- [x] ') });
     } else if (line.startsWith('- ')) {
       tokens.push({ type: 'item', text: line.slice(2).trim() });
     } else if (line.startsWith('  *')) {
@@ -99,7 +101,7 @@ function markdownToHtml(md) {
 
   // ── Pass 2: skip h2/h3 headings whose section has no content ──────────────
   const HEADING_TYPES = new Set(['h1', 'h2', 'h3']);
-  const CONTENT_TYPES = new Set(['summary', 'item', 'detail', 'since']);
+  const CONTENT_TYPES = new Set(['summary', 'check', 'item', 'detail', 'since']);
   const skipIdx = new Set();
   for (let i = 0; i < tokens.length; i++) {
     const t = tokens[i];
@@ -141,6 +143,12 @@ function markdownToHtml(md) {
     } else if (t.type === 'summary') {
       closeItem();
       html += `<p class="mr-summary">${esc(t.text)}</p>`;
+    } else if (t.type === 'check') {
+      closeItem();
+      items.push({ title: t.text, section: currentSection });
+      const doneClass = t.checked ? ' mr-item-done' : '';
+      html += `<div class="mr-item${doneClass}" data-idx="${idx++}"><div class="mr-item-header"><span class="mr-item-text">${esc(t.text)}</span></div>`;
+      openItem = true;
     } else if (t.type === 'item') {
       closeItem();
       items.push({ title: t.text, section: currentSection });
