@@ -74,6 +74,45 @@ function esc(str) {
 
 function markdownToHtml(md) {
   const lines = md.split('\n');
+
+  // ── Pass 1: parse into token objects ───────────────────────────────────────
+  const tokens = [];
+  for (const line of lines) {
+    if (line.startsWith('### ')) {
+      tokens.push({ type: 'h3', text: line.slice(4).trim() });
+    } else if (line.startsWith('## ')) {
+      tokens.push({ type: 'h2', text: line.slice(3).trim() });
+    } else if (line.startsWith('# ')) {
+      tokens.push({ type: 'h1', text: line.slice(2).trim() });
+    } else if (line.startsWith('> ')) {
+      tokens.push({ type: 'summary', text: line.slice(2).trim() });
+    } else if (line.startsWith('- ')) {
+      tokens.push({ type: 'item', text: line.slice(2).trim() });
+    } else if (line.startsWith('  *')) {
+      tokens.push({ type: 'detail', text: line.trim().replace(/\*/g, '') });
+    } else if (line.startsWith('  `')) {
+      tokens.push({ type: 'since', text: line.trim().replace(/`/g, '') });
+    } else {
+      tokens.push({ type: 'blank' });
+    }
+  }
+
+  // ── Pass 2: skip h2/h3 headings whose section has no content ──────────────
+  const HEADING_TYPES = new Set(['h1', 'h2', 'h3']);
+  const CONTENT_TYPES = new Set(['summary', 'item', 'detail', 'since']);
+  const skipIdx = new Set();
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t.type !== 'h2' && t.type !== 'h3') continue;
+    let hasContent = false;
+    for (let j = i + 1; j < tokens.length; j++) {
+      if (HEADING_TYPES.has(tokens[j].type)) break;
+      if (CONTENT_TYPES.has(tokens[j].type)) { hasContent = true; break; }
+    }
+    if (!hasContent) skipIdx.add(i);
+  }
+
+  // ── Pass 3: render ─────────────────────────────────────────────────────────
   let html = '';
   let currentSection = '';
   let idx = 0;
@@ -84,27 +123,33 @@ function markdownToHtml(md) {
     if (openItem) { html += '</div>'; openItem = false; }
   }
 
-  for (const line of lines) {
-    if (line.startsWith('# ')) {
+  for (let i = 0; i < tokens.length; i++) {
+    if (skipIdx.has(i)) continue;
+    const t = tokens[i];
+
+    if (t.type === 'h1') {
       closeItem();
-      html += `<h2 class="mr-title">${esc(line.slice(2))}</h2>`;
-    } else if (line.startsWith('## ')) {
+      html += `<h2 class="mr-title">${esc(t.text)}</h2>`;
+    } else if (t.type === 'h2') {
       closeItem();
-      currentSection = line.slice(3).trim();
-      html += `<h3 class="mr-cat">${esc(currentSection)}</h3>`;
-    } else if (line.startsWith('> ')) {
+      currentSection = t.text;
+      const isPhase = currentSection.startsWith('Phase:');
+      html += `<h3 class="${isPhase ? 'mr-phase' : 'mr-cat'}">${esc(currentSection)}</h3>`;
+    } else if (t.type === 'h3') {
       closeItem();
-      html += `<p class="mr-summary">${esc(line.slice(2))}</p>`;
-    } else if (line.startsWith('- ')) {
+      html += `<h4 class="mr-subcat">${esc(t.text)}</h4>`;
+    } else if (t.type === 'summary') {
       closeItem();
-      const title = line.slice(2).replace(/^\S+\s/, '').trim();
-      items.push({ title, section: currentSection });
-      html += `<div class="mr-item" data-idx="${idx++}"><div class="mr-item-header"><span class="mr-item-text">${esc(line.slice(2))}</span></div>`;
+      html += `<p class="mr-summary">${esc(t.text)}</p>`;
+    } else if (t.type === 'item') {
+      closeItem();
+      items.push({ title: t.text, section: currentSection });
+      html += `<div class="mr-item" data-idx="${idx++}"><div class="mr-item-header"><span class="mr-item-text">${esc(t.text)}</span></div>`;
       openItem = true;
-    } else if (line.startsWith('  *') && openItem) {
-      html += `<span class="mr-detail-text">${esc(line.trim().replace(/\*/g, ''))}</span>`;
-    } else if (line.startsWith('  `') && openItem) {
-      html += `<span class="mr-since">${esc(line.trim().replace(/`/g, ''))}</span>`;
+    } else if (t.type === 'detail' && openItem) {
+      html += `<span class="mr-detail-text">${esc(t.text)}</span>`;
+    } else if (t.type === 'since' && openItem) {
+      html += `<span class="mr-since">${esc(t.text)}</span>`;
     } else {
       closeItem();
     }

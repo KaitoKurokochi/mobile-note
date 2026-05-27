@@ -465,6 +465,27 @@ body {
   margin-bottom: 4px;
 }
 
+.mr-phase {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #007aff;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  border-left: 2px solid #007aff;
+  padding-left: 8px;
+}
+
+.mr-subcat {
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-style: italic;
+  color: #8e8e93;
+  margin-top: 8px;
+  margin-bottom: 2px;
+  padding-left: 14px;
+  border-left: 2px solid #d1d1d6;
+}
+
 .mr-item {
   background: #fff;
   border-radius: 10px;
