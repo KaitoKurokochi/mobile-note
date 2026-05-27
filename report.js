@@ -134,19 +134,25 @@ function markdownToHtml(md) {
   }
 
   for (let i = 0; i < tokens.length; i++) {
-    if (skipIdx.has(i)) continue;
     const t = tokens[i];
+
+    // Always update section tracking for h2, even when skipped for rendering,
+    // so that items inside Phase: blocks inherit the correct parent section
+    // (e.g. "🔬 Research" which is itself an empty wrapper heading).
+    if (t.type === 'h2') {
+      const isPhase = t.text.startsWith('Phase:');
+      currentSection = t.text;
+      if (!isPhase) currentTopSection = t.text;
+    }
+
+    if (skipIdx.has(i)) continue;
 
     if (t.type === 'h1') {
       closeItem();
       html += `<h2 class="mr-title">${esc(t.text)}</h2>`;
     } else if (t.type === 'h2') {
       closeItem();
-      currentSection = t.text;
       const isPhase = currentSection.startsWith('Phase:');
-      // Keep track of the top-level section so items inside Phase: blocks
-      // inherit the parent label (e.g. "🔬 Research") rather than "Phase: ..."
-      if (!isPhase) currentTopSection = t.text;
       html += `<h3 class="${isPhase ? 'mr-phase' : 'mr-cat'}">${esc(currentSection)}</h3>`;
     } else if (t.type === 'h3') {
       closeItem();
