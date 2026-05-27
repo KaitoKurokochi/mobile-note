@@ -72,6 +72,12 @@ function esc(str) {
     .replace(/>/g, '&gt;');
 }
 
+// Extract label_key from "(#NNN, label_key)" suffix, e.g. "Task text (#42, my_home_page)" → "my_home_page"
+function extractSourceLabel(text) {
+  const m = text.match(/\(#\d+,\s*([^)]+)\)\s*$/);
+  return m ? m[1].trim() : null;
+}
+
 function markdownToHtml(md) {
   const lines = md.split('\n');
 
@@ -116,7 +122,9 @@ function markdownToHtml(md) {
 
   // ── Pass 3: render ─────────────────────────────────────────────────────────
   let html = '';
-  let currentSection = '';
+  let currentSection = '';      // current h2 text (may be "Phase: ..." subheading)
+  let currentTopSection = '';   // last h2 text that is NOT a Phase: subheading
+                                // used as the label hint for items inside Phase: blocks
   let idx = 0;
   const items = [];
   let openItem = false;
@@ -136,6 +144,9 @@ function markdownToHtml(md) {
       closeItem();
       currentSection = t.text;
       const isPhase = currentSection.startsWith('Phase:');
+      // Keep track of the top-level section so items inside Phase: blocks
+      // inherit the parent label (e.g. "🔬 Research") rather than "Phase: ..."
+      if (!isPhase) currentTopSection = t.text;
       html += `<h3 class="${isPhase ? 'mr-phase' : 'mr-cat'}">${esc(currentSection)}</h3>`;
     } else if (t.type === 'h3') {
       closeItem();
@@ -145,13 +156,20 @@ function markdownToHtml(md) {
       html += `<p class="mr-summary">${esc(t.text)}</p>`;
     } else if (t.type === 'check') {
       closeItem();
-      items.push({ title: t.text, section: currentSection });
+      const checkSourceLabel = extractSourceLabel(t.text);
+      // Use top-level section for label guessing so Phase: items map back to their parent label
+      const itemSection = currentSection.startsWith('Phase:') ? currentTopSection : currentSection;
+      items.push({ title: t.text, section: itemSection, sourceLabel: checkSourceLabel });
+      console.debug('[mobile-note] item pushed:', { title: t.text, section: itemSection, sourceLabel: checkSourceLabel });
       const doneClass = t.checked ? ' mr-item-done' : '';
       html += `<div class="mr-item${doneClass}" data-idx="${idx++}"><div class="mr-item-header"><span class="mr-item-text">${esc(t.text)}</span></div>`;
       openItem = true;
     } else if (t.type === 'item') {
       closeItem();
-      items.push({ title: t.text, section: currentSection });
+      const itemSourceLabel = extractSourceLabel(t.text);
+      const itemSection = currentSection.startsWith('Phase:') ? currentTopSection : currentSection;
+      items.push({ title: t.text, section: itemSection, sourceLabel: itemSourceLabel });
+      console.debug('[mobile-note] item pushed:', { title: t.text, section: itemSection, sourceLabel: itemSourceLabel });
       html += `<div class="mr-item" data-idx="${idx++}"><div class="mr-item-header"><span class="mr-item-text">${esc(t.text)}</span></div>`;
       openItem = true;
     } else if (t.type === 'detail' && openItem) {

@@ -25,16 +25,54 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 let currentMention = null;
 
+// Match a section name to a label in localStorage (case-insensitive, ignoring emoji/symbols)
+function guessLabel(section) {
+  if (!section) return null;
+  const labels = getLabels();
+  // Exact match first
+  if (labels.includes(section)) return section;
+  // Normalise: strip non-alphanumeric characters (emoji, spaces, underscores, symbols)
+  // and lowercase so that "🔬 Research"→"research", "🦁 Lions IS"→"lionsis",
+  // "Lions_IS"→"lionsis" all match each other.
+  const norm = s => s.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const matched = labels.find(l => norm(l) === norm(section)) || null;
+  console.debug('[mobile-note] guessLabel:', { section, labels, norm_section: norm(section), matched });
+  return matched;
+}
+
+// Select a label pill in the form UI by label name
+function selectLabelPill(name) {
+  selectedLabel = name;
+  const labelRow = document.getElementById('label-row');
+  if (!labelRow) {
+    console.debug('[mobile-note] selectLabelPill: label-row not found, selectedLabel set to', name);
+    return;
+  }
+  labelRow.querySelectorAll('.label-pill').forEach(p => {
+    const match = p.textContent.trim() === name;
+    p.classList.toggle('selected', match);
+  });
+  console.debug('[mobile-note] selectLabelPill:', name);
+}
+
 function setMention(item) {
   currentMention = item;
   renderMentionBadge();
+  // sourceLabel (from "(#NNN, label_key)" in Others section) takes priority over section name
+  const labelCandidate = item.sourceLabel || item.section;
+  console.debug('[mobile-note] setMention:', { item, labelCandidate });
+  const matched = guessLabel(labelCandidate);
+  if (matched) {
+    selectLabelPill(matched);
+  }
 }
 
 function renderMentionBadge() {
   const badge = document.getElementById('mention-badge');
   if (!badge) return;
   if (currentMention) {
-    const sec = currentMention.section ? ` · ${currentMention.section}` : '';
+    const displaySec = currentMention.sourceLabel || currentMention.section;
+    const sec = displaySec ? ` · ${displaySec}` : '';
     badge.classList.remove('hidden');
     badge.querySelector('.mention-badge-text').textContent = `@ ${currentMention.title}`;
     badge.querySelector('.mention-badge-section').textContent = sec;
@@ -298,9 +336,14 @@ function renderForm() {
     status.className = 'form-status';
 
     const roleStr  = [...selectedRoles].map(r => `[${r}]`).join('');
-    const refLine  = currentMention
-      ? `> ref: ${currentMention.title}${currentMention.section ? ` (${currentMention.section})` : ''}\n\n`
-      : '';
+    const refLine  = currentMention ? (() => {
+      // Strip both "(#NNN)" and "(#NNN, label_key)" suffixes from the title
+      const cleanTitle = currentMention.title.replace(/\s*\(#\d+(?:,\s*[^)]+)?\)$/, '');
+      const num = currentMention.number != null ? `#${currentMention.number} ` : '';
+      const displaySec = currentMention.sourceLabel || currentMention.section;
+      const sec = displaySec ? ` (${displaySec})` : '';
+      return `ref: ${num}${cleanTitle}${sec}\n\n`;
+    })() : '';
     const body  = refLine + text;
     const title = `[${selectedLabel}]${roleStr} ` + text.slice(0, 72) + (text.length > 72 ? '…' : '');
 
