@@ -485,6 +485,24 @@ function buildNoteItem(issue) {
     tagsDiv.appendChild(span);
   });
 
+  // Add role button (shown only when no roles are set)
+  if (roles.length === 0) {
+    const addRoleBtn = document.createElement('button');
+    addRoleBtn.className = 'note-item-add-role';
+    addRoleBtn.textContent = '+';
+    addRoleBtn.title = 'ロールを追加';
+    addRoleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const options = getRoles().map(({ key, icon }) => ({ label: `${icon} ${key}`, value: key }));
+      showDropdown(addRoleBtn, options, roleKey => {
+        const t = buildTitle(label, [roleKey], text);
+        replaceWith(t);
+        updateIssue(issue.number, { title: t }).catch(() => replaceWith(issue.title));
+      });
+    });
+    tagsDiv.appendChild(addRoleBtn);
+  }
+
   item.appendChild(tagsDiv);
 
   const body = document.createElement('p');

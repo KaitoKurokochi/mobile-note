@@ -406,19 +406,20 @@ body {
 }
 
 .note-item-add-role {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.72rem;
   color: #8e8e93;
   background: none;
   border: 1px dashed #d1d1d6;
   border-radius: 5px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s;
+  opacity: 1;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.note-item-tags:hover .note-item-add-role,
-.note-item-tags:focus-within .note-item-add-role { opacity: 1; }
+.note-item-add-role:active { color: #34c759; border-color: #34c759; }
 
 .note-item-body {
   font-size: 0.92rem;
