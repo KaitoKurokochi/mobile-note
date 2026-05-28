@@ -308,9 +308,15 @@ function renderForm() {
     pill.textContent = icon;
     pill.dataset.label = key;
     pill.addEventListener('click', () => {
-      if (selectedRoles.has(key)) selectedRoles.delete(key);
-      else selectedRoles.add(key);
-      pill.classList.toggle('selected');
+      if (selectedRoles.has(key)) {
+        selectedRoles.delete(key);
+        pill.classList.remove('selected');
+      } else {
+        selectedRoles.clear();
+        roleRow.querySelectorAll('.role-pill').forEach(p => p.classList.remove('selected'));
+        selectedRoles.add(key);
+        pill.classList.add('selected');
+      }
     });
     roleRow.appendChild(pill);
   });
@@ -478,20 +484,6 @@ function buildNoteItem(issue) {
     });
     tagsDiv.appendChild(span);
   });
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'note-item-add-role';
-  addBtn.textContent = '+';
-  addBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    const opts = getRoles().filter(r => !roles.includes(r.key)).map(r => ({ label: `${r.icon} ${r.key}`, value: r.key }));
-    showDropdown(addBtn, opts, roleKey => {
-      const t = buildTitle(label, [...roles, roleKey], text);
-      replaceWith(t);
-      updateIssue(issue.number, { title: t }).catch(() => replaceWith(issue.title));
-    });
-  });
-  tagsDiv.appendChild(addBtn);
 
   item.appendChild(tagsDiv);
 
