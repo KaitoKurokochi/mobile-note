@@ -1,9 +1,15 @@
-// ── Report: fetch reports.md from my_notes and render with @ buttons ─────────
+// ── Report: fetch Due Today and Status Report from agent repo ─────────────────
 
 const REPORT_OWNER = 'KaitoKurokochi';
-const REPORT_REPO  = 'my_notes';
+const REPORT_REPO  = 'agent';
 
-async function fetchMyNotesFile(path) {
+
+let reportMentionItems = [];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Fetch a file from the agent repository via GitHub Contents API.
+async function fetchAgentFile(path) {
   const res = await fetch(
     `https://api.github.com/repos/${REPORT_OWNER}/${REPORT_REPO}/contents/${path}`,
     { headers: syncHeaders() }
@@ -13,56 +19,204 @@ async function fetchMyNotesFile(path) {
   return decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
 }
 
-let reportMentionItems = [];
+// Extracts the ## Status section from a note.md string.
+function extractStatusSection(md) {
+  const lines = md.split('\n');
+  let inStatus = false;
+  const result = [];
+  for (const line of lines) {
+    if (/^## Status\s*$/.test(line)) { inStatus = true; continue; }
+    if (inStatus && /^## /.test(line)) break;
+    if (inStatus) result.push(line);
+  }
+  while (result.length && result[0].trim() === '') result.shift();
+  while (result.length && result[result.length - 1].trim() === '') result.pop();
+  return result.join('\n');
+}
+
+// ── Tasks Due Today ───────────────────────────────────────────────────────────
+
+async function renderDueToday(container) {
+  const section = document.createElement('div');
+  section.className = 'report-section';
+
+  const heading = document.createElement('h2');
+  heading.className = 'report-section-heading';
+  heading.textContent = 'Tasks Due Today';
+  section.appendChild(heading);
+
+  try {
+    const text = await fetchAgentFile('my_home_page/due_today.json');
+    const data = JSON.parse(text);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const tasks = (data.tasks || []).filter(() => !data.date || data.date === today);
+
+    if (tasks.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'placeholder';
+      empty.textContent = 'No tasks due today';
+      section.appendChild(empty);
+    } else {
+      const ul = document.createElement('ul');
+      ul.className = 'report-list';
+      tasks.forEach(t => {
+        const li = document.createElement('li');
+        li.className = 'report-list-item' + (t.overdue ? ' report-item--overdue' : '');
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'report-label-badge';
+        labelSpan.textContent = (t.label || t.key || '').replace(/_/g, ' ');
+        const textSpan = document.createElement('span');
+        textSpan.textContent = t.task
+          .replace(/^\d{4}-\d{2}-\d{2}\s+/, '')
+          .replace(/\[[\w\s]+\]\s*/g, '')
+          .replace(/\s*\(#\d+\)\s*$/, '')
+          .trim();
+        li.appendChild(labelSpan);
+        li.appendChild(textSpan);
+        ul.appendChild(li);
+      });
+      section.appendChild(ul);
+    }
+  } catch (_) {
+    const p = document.createElement('p');
+    p.className = 'placeholder';
+    p.textContent = 'Due today unavailable';
+    section.appendChild(p);
+  }
+
+  container.appendChild(section);
+}
+
+// ── Status Report ─────────────────────────────────────────────────────────────
+
+// All agent domains: [filePath, displayName]
+const REPORT_DOMAINS = [
+  ['research/note.md',      'Research'],
+  ['Lions_IS/note.md',      'Lions IS'],
+  ['baseball/note.md',      'Baseball'],
+  ['my_home_page/note.md',  'My Home Page'],
+  ['football/note.md',      'Football'],
+  ['books/note.md',         'Books'],
+  ['softball/note.md',      'Softball'],
+  ['univ/note.md',          'University'],
+  ['video_content/note.md', 'Video Content'],
+  ['general/note.md',       'General'],
+  ['living/note.md',        'Living'],
+  ['agent_meta/note.md',    'Agent Meta'],
+];
+
+async function fetchSelectedDomains() {
+  try {
+    const text = await fetchAgentFile('my_home_page/selected_domains.json');
+    const data = JSON.parse(text);
+    // Format: { date: "YYYY-MM-DD", domains: ["research", "general", ...] }
+    return Array.isArray(data.domains) ? data.domains : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function renderStatusReport(container) {
+  const section = document.createElement('div');
+  section.className = 'report-section';
+
+  const heading = document.createElement('h2');
+  heading.className = 'report-section-heading';
+  heading.textContent = 'Status Report';
+  section.appendChild(heading);
+
+  try {
+    // Determine which domains to show
+    const selectedKeys = await fetchSelectedDomains();
+    let domains = REPORT_DOMAINS;
+    if (selectedKeys && selectedKeys.length > 0) {
+      domains = REPORT_DOMAINS.filter(([path]) => {
+        const key = path.split('/')[0];
+        return selectedKeys.includes(key);
+      });
+    }
+
+    // Fetch all note.md files in parallel
+    const results = await Promise.all(
+      domains.map(async ([path, name]) => {
+        try {
+          const md = await fetchAgentFile(path);
+          const status = extractStatusSection(md);
+          if (!status) return null;
+          return { name, status };
+        } catch (_) {
+          return null;
+        }
+      })
+    );
+
+    const valid = results.filter(Boolean);
+    if (valid.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'placeholder';
+      empty.textContent = 'No status report available';
+      section.appendChild(empty);
+    } else {
+      valid.forEach(({ name, status }) => {
+        const domainDiv = document.createElement('div');
+        domainDiv.className = 'report-domain';
+
+        const domainHeading = document.createElement('h3');
+        domainHeading.className = 'report-domain-heading';
+        domainHeading.textContent = name;
+        domainDiv.appendChild(domainHeading);
+
+        const { html, items } = markdownToHtml(status);
+        reportMentionItems = reportMentionItems.concat(items);
+
+        const body = document.createElement('div');
+        body.className = 'report-domain-body';
+        body.innerHTML = html;
+
+        // Attach @ buttons
+        body.querySelectorAll('.mr-item[data-idx]').forEach(el => {
+          const idx = Number(el.dataset.idx);
+          const btn = document.createElement('button');
+          btn.className = 'mr-mention-btn';
+          btn.textContent = '@';
+          btn.addEventListener('click', () => {
+            setMention(reportMentionItems[idx]);
+            switchTab('form');
+          });
+          el.querySelector('.mr-item-header').appendChild(btn);
+        });
+
+        domainDiv.appendChild(body);
+        section.appendChild(domainDiv);
+      });
+    }
+  } catch (e) {
+    const p = document.createElement('p');
+    p.className = 'error-msg';
+    p.textContent = `Status report error: ${e.message}`;
+    section.appendChild(p);
+  }
+
+  container.appendChild(section);
+}
+
+// ── Main loadReport ───────────────────────────────────────────────────────────
 
 async function loadReport() {
   const container = document.getElementById('report-container');
 
   if (!getToken()) {
-    container.innerHTML = '<p class="placeholder">トークンが未設定です。Formタブでトークンを設定してください。</p>';
+    container.innerHTML = '<p class="placeholder">Token not set. Please set your token in the Form tab.</p>';
     return;
   }
 
   container.innerHTML = '<p class="placeholder">Loading...</p>';
   reportMentionItems = [];
+  container.innerHTML = '';
 
-  try {
-    const md = await fetchMyNotesFile('reports.md');
-    const { html, items } = markdownToHtml(md);
-    reportMentionItems = items;
-
-    const div = document.createElement('div');
-    div.className = 'report-body';
-    div.innerHTML = html;
-
-    // Attach @ buttons
-    div.querySelectorAll('.mr-item[data-idx]').forEach(el => {
-      const idx = Number(el.dataset.idx);
-      const btn = document.createElement('button');
-      btn.className = 'mr-mention-btn';
-      btn.textContent = '@';
-      btn.addEventListener('click', () => {
-        setMention(reportMentionItems[idx]);
-        switchTab('form');
-      });
-      el.querySelector('.mr-item-header').appendChild(btn);
-    });
-
-    container.innerHTML = '';
-    container.appendChild(div);
-  } catch (e) {
-    let msg;
-    if (e.status === 404) {
-      msg = '<p class="placeholder">レポートはまだ生成されていません</p>';
-    } else if (e.status === 403) {
-      msg = '<p class="error-msg">アクセス拒否 (403): PATに <code>Contents: read</code> 権限を追加してください。</p>';
-    } else if (e.status === 401) {
-      msg = '<p class="error-msg">認証エラー (401): トークンが無効です。Formタブでトークンを再設定してください。</p>';
-    } else {
-      msg = `<p class="error-msg">読み込み失敗: ${e.message}</p>`;
-    }
-    container.innerHTML = msg;
-  }
+  await renderDueToday(container);
+  await renderStatusReport(container);
 }
 
 function esc(str) {

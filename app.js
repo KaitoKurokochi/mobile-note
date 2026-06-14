@@ -1,7 +1,7 @@
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const NOTE_OWNER = 'KaitoKurokochi';
-const NOTE_REPO  = 'my_notes';
+const NOTE_REPO  = 'agent';
 const GITHUB_API = `https://api.github.com/repos/${NOTE_OWNER}/${NOTE_REPO}/issues`;
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
@@ -110,7 +110,11 @@ function renderForm() {
   const labels = getLabels();
   const roles  = getRoles();
 
-  if (!selectedLabel && labels.length) selectedLabel = labels[0];
+  if (!selectedLabel && labels.length) {
+    // Use location-based default if available (set by location.js), else fall back to first label
+    const locDefault = window.defaultLabelForZone;
+    selectedLabel = (locDefault && labels.includes(locDefault)) ? locDefault : labels[0];
+  }
 
   c.innerHTML = `
     <form class="note-form" id="note-form" autocomplete="off">
@@ -338,7 +342,7 @@ function renderForm() {
 
     const btn = document.querySelector('.submit-btn');
     btn.disabled = true;
-    status.textContent = '保存中...';
+    status.textContent = 'Saving...';
     status.className = 'form-status';
 
     const roleStr  = [...selectedRoles].map(r => `[${r}]`).join('');
@@ -371,11 +375,11 @@ function renderForm() {
       currentMention = null;
       renderMentionBadge();
       roleRow.querySelectorAll('.role-pill').forEach(p => p.classList.remove('selected'));
-      status.textContent = '保存しました ✓';
+      status.textContent = 'Saved ✓';
       status.className = 'form-status ok';
       notesLoaded = false; // force reload next time
     } catch (err) {
-      status.textContent = `エラー: ${err.message}`;
+      status.textContent = `Error: ${err.message}`;
       status.className = 'form-status err';
     } finally {
       btn.disabled = false;
@@ -528,9 +532,13 @@ async function loadNotes() {
     );
     if (!res.ok) throw new Error(`${res.status}`);
     const issues = await res.json();
+    // Filter to issues created within the last 2 hours
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+    const now = Date.now();
+    const recent = issues.filter(issue => now - new Date(issue.created_at).getTime() <= TWO_HOURS_MS);
     c.innerHTML = '';
-    if (!issues.length) { c.innerHTML = '<p class="placeholder">まだノートがありません</p>'; return; }
-    issues.forEach(issue => c.appendChild(buildNoteItem(issue)));
+    if (!recent.length) { c.innerHTML = '<p class="placeholder">No notes in the last 2 hours</p>'; return; }
+    recent.forEach(issue => c.appendChild(buildNoteItem(issue)));
   } catch (err) {
     c.innerHTML = `<p class="error-msg">読み込み失敗: ${err.message}</p>`;
   }
