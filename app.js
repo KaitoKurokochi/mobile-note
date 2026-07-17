@@ -355,7 +355,7 @@ function renderForm() {
       return `ref: ${num}${cleanTitle}${sec}\n\n`;
     })() : '';
     const body  = refLine + text;
-    const title = `[${selectedLabel}]${roleStr} ` + text.slice(0, 72) + (text.length > 72 ? '…' : '');
+    const title = `[${selectedLabel}]${roleStr}`;
 
     try {
       const res = await fetch(GITHUB_API, {
