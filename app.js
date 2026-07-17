@@ -507,6 +507,20 @@ function buildNoteItem(issue) {
     tagsDiv.appendChild(addRoleBtn);
   }
 
+  // Mention button
+  const mentionBtn = document.createElement('button');
+  mentionBtn.className = 'note-item-mention-btn';
+  mentionBtn.textContent = '@';
+  mentionBtn.title = 'このノートをメンション';
+  mentionBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const bodyLines = (issue.body || '').split('\n').filter(l => l.trim());
+    const displayText = bodyLines[0] || issue.title;
+    setMention({ title: displayText, section: label, number: issue.number });
+    switchTab('form');
+  });
+  tagsDiv.appendChild(mentionBtn);
+
   item.appendChild(tagsDiv);
 
   const body = document.createElement('p');
