@@ -167,6 +167,7 @@ async function renderStatusReport(container) {
         domainHeading.textContent = name;
         domainDiv.appendChild(domainHeading);
 
+        const idxOffset = reportMentionItems.length;
         const { html, items } = markdownToHtml(status);
         reportMentionItems = reportMentionItems.concat(items);
 
@@ -176,7 +177,7 @@ async function renderStatusReport(container) {
 
         // Attach @ buttons
         body.querySelectorAll('.mr-item[data-idx]').forEach(el => {
-          const idx = Number(el.dataset.idx);
+          const idx = idxOffset + Number(el.dataset.idx);
           const btn = document.createElement('button');
           btn.className = 'mr-mention-btn';
           btn.textContent = '@';
