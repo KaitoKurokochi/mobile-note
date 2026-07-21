@@ -108,7 +108,7 @@ const REPORT_DOMAINS = [
 
 async function fetchSelectedDomains() {
   try {
-    const text = await fetchAgentFile('my_home_page/selected_domains.json');
+    const text = await fetchAgentFile('my_home_page/runtime/selected_domains.json');
     const data = JSON.parse(text);
     // Format: { date: "YYYY-MM-DD", domains: ["research", "general", ...] }
     return Array.isArray(data.domains) ? data.domains : null;
@@ -129,13 +129,12 @@ async function renderStatusReport(container) {
   try {
     // Determine which domains to show
     const selectedKeys = await fetchSelectedDomains();
-    let domains = REPORT_DOMAINS;
-    if (selectedKeys && selectedKeys.length > 0) {
-      domains = REPORT_DOMAINS.filter(([path]) => {
-        const key = path.split('/')[0];
-        return selectedKeys.includes(key);
-      });
-    }
+    const ALWAYS_KEYS = ['research', 'general', 'living'];
+    const activeKeys = (selectedKeys && selectedKeys.length > 0) ? selectedKeys : ALWAYS_KEYS;
+    const domains = REPORT_DOMAINS.filter(([path]) => {
+      const key = path.split('/')[0];
+      return activeKeys.includes(key);
+    });
 
     // Fetch all note.md files in parallel
     const results = await Promise.all(
