@@ -612,6 +612,54 @@ body {
   padding-left: 4px;
 }
 
+/* ── Collapsible domain cards in mobile Report ───────────────────────────────*/
+
+.mobile-rd-section {
+  margin-bottom: 10px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.mobile-rd-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-rd-arrow {
+  font-size: 0.7rem;
+  color: #007aff;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.mobile-rd-section.mobile-rd-collapsed .mobile-rd-arrow {
+  transform: rotate(-90deg);
+}
+
+.mobile-rd-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1c1c1e;
+  flex: 1;
+}
+
+.mobile-rd-body {
+  padding: 0 10px 10px;
+  border-top: 1px solid #f2f2f7;
+}
+
+.mobile-rd-section.mobile-rd-collapsed .mobile-rd-body {
+  display: none;
+}
+
 .report-list {
   list-style: none;
   padding: 0;

@@ -117,9 +117,103 @@ async function fetchSelectedDomains() {
   }
 }
 
+// Compute which domain display names should be auto-expanded.
+// Logic mirrors status.js computeDomainSelection() but for mobile.
+// Zone info from window.currentZone (set by location.js after GPS resolves).
+function computeAutoExpandNames(selectedKeys) {
+  const autoExpand = new Set();
+  const zone = window.currentZone;
+  const dow  = new Date().getDay(); // 0 = Sunday
+
+  if (zone === 'home') {
+    autoExpand.add('Living');
+  }
+  if (zone === 'univ') {
+    autoExpand.add('Research');
+  }
+  if (zone === 'lions_is') {
+    autoExpand.add('Lions IS');
+  }
+  if (dow === 0) {
+    autoExpand.add('My Home Page');
+  }
+
+  // Add names for any domains present in selected_domains.json
+  if (selectedKeys && selectedKeys.length > 0) {
+    for (const key of selectedKeys) {
+      const entry = REPORT_DOMAINS.find(([path]) => path.split('/')[0] === key);
+      if (entry) autoExpand.add(entry[1]);
+    }
+  }
+
+  return autoExpand;
+}
+
+// Re-applies auto-expand to already-rendered mobile-rd-section wrappers.
+// Called by location.js when GPS zone becomes available after initial render.
+// Never auto-collapses manually expanded sections.
+function reapplyReportAutoExpand() {
+  const section = document.querySelector('.report-section[data-report="status"]');
+  if (!section) return;
+  const autoExpandNames = computeAutoExpandNames(window._reportSelectedKeys || null);
+  section.querySelectorAll('.mobile-rd-section').forEach(wrapper => {
+    const name = wrapper.dataset.name || '';
+    const shouldExpand = [...autoExpandNames].some(n =>
+      name === n || name.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(name.toLowerCase())
+    );
+    if (shouldExpand) {
+      wrapper.classList.remove('mobile-rd-collapsed');
+    }
+  });
+}
+
+// Build one collapsible domain card inside the Status Report section.
+function buildDomainCard(name, status, autoExpandNames) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'mobile-rd-section';
+  wrapper.dataset.name = name;
+
+  // Heading row (clickable)
+  const headingRow = document.createElement('div');
+  headingRow.className = 'mobile-rd-heading';
+
+  const arrow = document.createElement('span');
+  arrow.className = 'mobile-rd-arrow';
+  arrow.textContent = '▼';
+
+  const title = document.createElement('span');
+  title.className = 'mobile-rd-title';
+  title.textContent = name;
+
+  headingRow.appendChild(arrow);
+  headingRow.appendChild(title);
+  wrapper.appendChild(headingRow);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'mobile-rd-body';
+  wrapper.appendChild(body);
+
+  // Determine initial collapsed state
+  const shouldExpand = [...autoExpandNames].some(n =>
+    name === n || name.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(name.toLowerCase())
+  );
+  if (!shouldExpand) {
+    wrapper.classList.add('mobile-rd-collapsed');
+  }
+
+  // Click handler
+  headingRow.addEventListener('click', () => {
+    wrapper.classList.toggle('mobile-rd-collapsed');
+  });
+
+  return { wrapper, body };
+}
+
 async function renderStatusReport(container) {
   const section = document.createElement('div');
   section.className = 'report-section';
+  section.dataset.report = 'status';
 
   const heading = document.createElement('h2');
   heading.className = 'report-section-heading';
@@ -129,12 +223,16 @@ async function renderStatusReport(container) {
   try {
     // Determine which domains to show
     const selectedKeys = await fetchSelectedDomains();
+    window._reportSelectedKeys = selectedKeys;
     const ALWAYS_KEYS = ['research', 'general', 'living'];
     const activeKeys = (selectedKeys && selectedKeys.length > 0) ? selectedKeys : ALWAYS_KEYS;
     const domains = REPORT_DOMAINS.filter(([path]) => {
       const key = path.split('/')[0];
       return activeKeys.includes(key);
     });
+
+    // Compute auto-expand set now (GPS may not be ready yet)
+    const autoExpandNames = computeAutoExpandNames(selectedKeys);
 
     // Fetch all note.md files in parallel
     const results = await Promise.all(
@@ -158,20 +256,12 @@ async function renderStatusReport(container) {
       section.appendChild(empty);
     } else {
       valid.forEach(({ name, status }) => {
-        const domainDiv = document.createElement('div');
-        domainDiv.className = 'report-domain';
-
-        const domainHeading = document.createElement('h3');
-        domainHeading.className = 'report-domain-heading';
-        domainHeading.textContent = name;
-        domainDiv.appendChild(domainHeading);
+        const { wrapper, body } = buildDomainCard(name, status, autoExpandNames);
 
         const idxOffset = reportMentionItems.length;
         const { html, items } = markdownToHtml(status);
         reportMentionItems = reportMentionItems.concat(items);
 
-        const body = document.createElement('div');
-        body.className = 'report-domain-body';
         body.innerHTML = html;
 
         // Attach @ buttons
@@ -187,8 +277,7 @@ async function renderStatusReport(container) {
           el.querySelector('.mr-item-header').appendChild(btn);
         });
 
-        domainDiv.appendChild(body);
-        section.appendChild(domainDiv);
+        section.appendChild(wrapper);
       });
     }
   } catch (e) {

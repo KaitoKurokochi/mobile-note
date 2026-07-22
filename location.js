@@ -105,10 +105,16 @@
       const zoneName = await detectZone();
       const label = (zoneName && ZONE_LABEL_MAP[zoneName]) || DEFAULT_LABEL;
       window.defaultLabelForZone = label;
+      // Expose zone name for other modules (e.g. report.js auto-expand logic).
+      window.currentZone = zoneName || null;
       // If the form is already rendered, update the pill selection.
       // selectLabelPill is defined in app.js and only changes the UI highlight.
       if (typeof selectLabelPill === 'function') {
         selectLabelPill(label);
+      }
+      // If report is already rendered, re-apply domain auto-expand.
+      if (typeof reapplyReportAutoExpand === 'function') {
+        reapplyReportAutoExpand();
       }
     } catch (_) {
       // Location unavailable — leave window.defaultLabelForZone undefined
