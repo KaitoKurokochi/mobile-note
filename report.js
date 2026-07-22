@@ -46,7 +46,7 @@ async function renderDueToday(container) {
   section.appendChild(heading);
 
   try {
-    const text = await fetchAgentFile('my_home_page/due_today.json');
+    const text = await fetchAgentFile('my_home_page/runtime/due_today.json');
     const data = JSON.parse(text);
 
     const today = new Date().toISOString().slice(0, 10);
@@ -120,7 +120,7 @@ async function fetchSelectedDomains() {
 // Compute which domain display names should be auto-expanded.
 // Logic mirrors status.js computeDomainSelection() but for mobile.
 // Zone info from window.currentZone (set by location.js after GPS resolves).
-function computeAutoExpandNames(selectedKeys) {
+function computeAutoExpandNames() {
   const autoExpand = new Set();
   const zone = window.currentZone;
   const dow  = new Date().getDay(); // 0 = Sunday
@@ -138,14 +138,6 @@ function computeAutoExpandNames(selectedKeys) {
     autoExpand.add('My Home Page');
   }
 
-  // Add names for any domains present in selected_domains.json
-  if (selectedKeys && selectedKeys.length > 0) {
-    for (const key of selectedKeys) {
-      const entry = REPORT_DOMAINS.find(([path]) => path.split('/')[0] === key);
-      if (entry) autoExpand.add(entry[1]);
-    }
-  }
-
   return autoExpand;
 }
 
@@ -155,7 +147,7 @@ function computeAutoExpandNames(selectedKeys) {
 function reapplyReportAutoExpand() {
   const section = document.querySelector('.report-section[data-report="status"]');
   if (!section) return;
-  const autoExpandNames = computeAutoExpandNames(window._reportSelectedKeys || null);
+  const autoExpandNames = computeAutoExpandNames();
   section.querySelectorAll('.mobile-rd-section').forEach(wrapper => {
     const name = wrapper.dataset.name || '';
     const shouldExpand = [...autoExpandNames].some(n =>
@@ -232,7 +224,7 @@ async function renderStatusReport(container) {
     });
 
     // Compute auto-expand set now (GPS may not be ready yet)
-    const autoExpandNames = computeAutoExpandNames(selectedKeys);
+    const autoExpandNames = computeAutoExpandNames();
 
     // Fetch all note.md files in parallel
     const results = await Promise.all(
