@@ -6,12 +6,22 @@ const GITHUB_API = `https://api.github.com/repos/${NOTE_OWNER}/${NOTE_REPO}/issu
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
 
+const TAB_NAMES = ['form', 'notes', 'report'];
+let currentTabIndex = 0;
 let notesLoaded  = false;
 let reportLoaded = false;
 
-function switchTab(name) {
+function switchTab(name, animate = true) {
+  const idx = TAB_NAMES.indexOf(name);
+  if (idx === -1) return;
+  currentTabIndex = idx;
+
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+
+  const panels = document.querySelector('.panels');
+  if (animate) panels.classList.add('animating');
+  panels.style.transform = `translateX(-${idx * 100}%)`;
+  if (animate) panels.addEventListener('transitionend', () => panels.classList.remove('animating'), { once: true });
 
   if (name === 'notes'  && !notesLoaded)  { notesLoaded  = true; loadNotes(); }
   if (name === 'report' && !reportLoaded) { reportLoaded = true; loadReport(); }
@@ -20,6 +30,36 @@ function switchTab(name) {
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
+
+// ── Swipe navigation ──────────────────────────────────────────────────────────
+
+(function () {
+  const panels = document.querySelector('.panels');
+  let startX = 0, startY = 0, locked = null;
+
+  panels.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    locked = null;
+  }, { passive: true });
+
+  panels.addEventListener('touchmove', e => {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (locked === null) locked = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+    if (locked === 'h') e.preventDefault();
+  }, { passive: false });
+
+  panels.addEventListener('touchend', e => {
+    if (locked !== 'h') return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) < 50) return;
+    const next = dx < 0
+      ? Math.min(currentTabIndex + 1, TAB_NAMES.length - 1)
+      : Math.max(currentTabIndex - 1, 0);
+    if (next !== currentTabIndex) switchTab(TAB_NAMES[next]);
+  }, { passive: true });
+})();
 
 // ── Mention state ─────────────────────────────────────────────────────────────
 

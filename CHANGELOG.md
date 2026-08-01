@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-01
+
+### Added
+- Swipe gesture to switch between Form / Notes / Report tabs
+
 ## [1.1.0] - 2026-07-22
 
 ### Added

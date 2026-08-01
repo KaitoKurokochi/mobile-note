@@ -50,15 +50,22 @@ body {
 .panels {
   flex: 1;
   padding-top: calc(48px + env(safe-area-inset-top));
+  display: flex;
+  overflow: hidden;
+  will-change: transform;
 }
 
 .panel {
-  display: none;
+  flex: 0 0 100%;
   padding: 16px;
   min-height: calc(100dvh - 48px - env(safe-area-inset-top));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.panel.active { display: block; }
+.panels.animating {
+  transition: transform 0.25s ease;
+}
 
 /* ── Token setup ─────────────────────────────────────────────────────────────*/
 
