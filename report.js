@@ -316,7 +316,14 @@ async function loadReport() {
   }
 
   console.log('[report] loadReport finished, container children:', container.children.length);
-  container.insertAdjacentHTML('beforeend', `<p style="color:blue">debug: done (${container.children.length} children)</p>`);
+  const rect = container.getBoundingClientRect();
+  console.log('[report] container rect:', JSON.stringify(rect));
+  const panelReport = document.getElementById('panel-report');
+  const panelRect = panelReport ? panelReport.getBoundingClientRect() : null;
+  console.log('[report] panel-report rect:', JSON.stringify(panelRect));
+  const panelsEl = document.querySelector('.panels');
+  console.log('[report] panels transform:', panelsEl ? panelsEl.style.transform : 'n/a');
+  container.insertAdjacentHTML('beforeend', `<p style="color:blue;position:fixed;top:60px;left:0;z-index:9999;background:white">debug: done (${container.children.length} children) container top=${Math.round(rect.top)}</p>`);
 }
 
 function esc(str) {
