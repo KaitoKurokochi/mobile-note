@@ -286,18 +286,37 @@ async function renderStatusReport(container) {
 
 async function loadReport() {
   const container = document.getElementById('report-container');
+  console.log('[report] loadReport called, container:', container);
 
   if (!getToken()) {
-    container.innerHTML = '<p class="placeholder">Token not set. Please set your token in the Form tab.</p>';
+    console.log('[report] no token');
+    container.innerHTML = '<p class="placeholder">Token not set.</p>';
     return;
   }
+  console.log('[report] token ok');
 
   container.innerHTML = '<p class="placeholder">Loading...</p>';
   reportMentionItems = [];
-  container.innerHTML = '';
+  container.innerHTML = '<p style="color:red">debug: start</p>';
 
-  await renderDueToday(container);
-  await renderStatusReport(container);
+  try {
+    await renderDueToday(container);
+    console.log('[report] renderDueToday done');
+  } catch (e) {
+    console.error('[report] renderDueToday error:', e);
+    container.insertAdjacentHTML('beforeend', `<p style="color:red">DueToday error: ${e.message}</p>`);
+  }
+
+  try {
+    await renderStatusReport(container);
+    console.log('[report] renderStatusReport done');
+  } catch (e) {
+    console.error('[report] renderStatusReport error:', e);
+    container.insertAdjacentHTML('beforeend', `<p style="color:red">StatusReport error: ${e.message}</p>`);
+  }
+
+  console.log('[report] loadReport finished, container children:', container.children.length);
+  container.insertAdjacentHTML('beforeend', `<p style="color:blue">debug: done (${container.children.length} children)</p>`);
 }
 
 function esc(str) {
