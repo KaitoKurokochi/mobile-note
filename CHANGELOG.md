@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.5] - 2026-08-02
+
+### Fixed
+- Rewrite swipe/tab navigation using per-panel translateX classes; fixes Report and Notes panels not visible on mobile Safari
+
 ## [1.2.4] - 2026-08-02
 
 ### Fixed
