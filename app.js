@@ -34,14 +34,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // ── Swipe navigation ──────────────────────────────────────────────────────────
 
 (function () {
-  const panels = document.querySelector('.panels');
   let startX = 0;
 
-  panels.addEventListener('touchstart', e => {
+  document.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
   }, { passive: true });
 
-  panels.addEventListener('touchend', e => {
+  document.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - startX;
     if (Math.abs(dx) < 50) return;
     const next = dx < 0
