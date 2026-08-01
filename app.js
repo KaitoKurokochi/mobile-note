@@ -35,23 +35,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 (function () {
   const panels = document.querySelector('.panels');
-  let startX = 0, startY = 0, locked = null;
+  let startX = 0;
 
   panels.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    locked = null;
   }, { passive: true });
 
-  panels.addEventListener('touchmove', e => {
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
-    if (locked === null) locked = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
-    if (locked === 'h') e.preventDefault();
-  }, { passive: false });
-
   panels.addEventListener('touchend', e => {
-    if (locked !== 'h') return;
     const dx = e.changedTouches[0].clientX - startX;
     if (Math.abs(dx) < 50) return;
     const next = dx < 0
