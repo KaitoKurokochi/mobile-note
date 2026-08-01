@@ -1,8 +1,8 @@
-// ── Sync: pull labels/roles from my_notes/sync.json ─────────────────────────
+// ── Sync: pull labels/roles from agent/my_home_page/runtime/sync.json ────────
 
 const SYNC_OWNER = 'KaitoKurokochi';
-const SYNC_REPO  = 'my_notes';
-const SYNC_FILE  = 'sync.json';
+const SYNC_REPO  = 'agent';
+const SYNC_FILE  = 'my_home_page/runtime/sync.json';
 const SYNC_API   = `https://api.github.com/repos/${SYNC_OWNER}/${SYNC_REPO}/contents/${SYNC_FILE}`;
 
 const TOKEN_KEY     = 'NOTE_TOKEN';

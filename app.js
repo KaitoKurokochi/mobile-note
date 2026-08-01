@@ -20,7 +20,7 @@ function switchTab(name, animate = true) {
 
   const panels = document.querySelector('.panels');
   if (animate) panels.classList.add('animating');
-  panels.style.transform = `translateX(-${idx * 100}%)`;
+  panels.style.transform = `translateX(-${idx * 100}vw)`;
   if (animate) panels.addEventListener('transitionend', () => panels.classList.remove('animating'), { once: true });
 
   if (name === 'notes'  && !notesLoaded)  { notesLoaded  = true; loadNotes(); }
