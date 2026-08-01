@@ -37,7 +37,7 @@
   async function fetchLocationZones() {
     try {
       const res = await fetch(
-        `https://api.github.com/repos/KaitoKurokochi/agent/contents/my_home_page/location_zones.json`,
+        `https://api.github.com/repos/KaitoKurokochi/agent/contents/my_home_page/runtime/location_zones.json`,
         {
           headers: {
             'Accept': 'application/vnd.github+json',
