@@ -286,44 +286,18 @@ async function renderStatusReport(container) {
 
 async function loadReport() {
   const container = document.getElementById('report-container');
-  console.log('[report] loadReport called, container:', container);
 
   if (!getToken()) {
-    console.log('[report] no token');
-    container.innerHTML = '<p class="placeholder">Token not set.</p>';
+    container.innerHTML = '<p class="placeholder">Token not set. Please set your token in the Form tab.</p>';
     return;
   }
-  console.log('[report] token ok');
 
   container.innerHTML = '<p class="placeholder">Loading...</p>';
   reportMentionItems = [];
-  container.innerHTML = '<p style="color:red">debug: start</p>';
+  container.innerHTML = '';
 
-  try {
-    await renderDueToday(container);
-    console.log('[report] renderDueToday done');
-  } catch (e) {
-    console.error('[report] renderDueToday error:', e);
-    container.insertAdjacentHTML('beforeend', `<p style="color:red">DueToday error: ${e.message}</p>`);
-  }
-
-  try {
-    await renderStatusReport(container);
-    console.log('[report] renderStatusReport done');
-  } catch (e) {
-    console.error('[report] renderStatusReport error:', e);
-    container.insertAdjacentHTML('beforeend', `<p style="color:red">StatusReport error: ${e.message}</p>`);
-  }
-
-  console.log('[report] loadReport finished, container children:', container.children.length);
-  const rect = container.getBoundingClientRect();
-  console.log('[report] container rect:', JSON.stringify(rect));
-  const panelReport = document.getElementById('panel-report');
-  const panelRect = panelReport ? panelReport.getBoundingClientRect() : null;
-  console.log('[report] panel-report rect:', JSON.stringify(panelRect));
-  const panelsEl = document.querySelector('.panels');
-  console.log('[report] panels transform:', panelsEl ? panelsEl.style.transform : 'n/a');
-  container.insertAdjacentHTML('beforeend', `<p style="color:blue;position:fixed;top:60px;left:0;z-index:9999;background:white">debug: done (${container.children.length} children) container top=${Math.round(rect.top)}</p>`);
+  await renderDueToday(container);
+  await renderStatusReport(container);
 }
 
 function esc(str) {

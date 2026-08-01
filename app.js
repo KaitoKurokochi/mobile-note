@@ -11,17 +11,19 @@ let currentTabIndex = 0;
 let notesLoaded  = false;
 let reportLoaded = false;
 
-function switchTab(name, animate = true) {
+function switchTab(name) {
   const idx = TAB_NAMES.indexOf(name);
   if (idx === -1) return;
-  currentTabIndex = idx;
+
+  const panels = document.querySelectorAll('.panel');
+  panels.forEach((p, i) => {
+    p.classList.remove('active', 'prev');
+    if (i === idx) p.classList.add('active');
+    else if (i < idx) p.classList.add('prev');
+  });
 
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-
-  const panels = document.querySelector('.panels');
-  if (animate) panels.classList.add('animating');
-  panels.style.transform = `translateX(-${idx * 100}vw)`;
-  if (animate) panels.addEventListener('transitionend', () => panels.classList.remove('animating'), { once: true });
+  currentTabIndex = idx;
 
   if (name === 'notes'  && !notesLoaded)  { notesLoaded  = true; loadNotes(); }
   if (name === 'report' && !reportLoaded) { reportLoaded = true; loadReport(); }

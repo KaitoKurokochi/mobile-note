@@ -48,24 +48,31 @@ body {
 /* ── Panels ──────────────────────────────────────────────────────────────────*/
 
 .panels {
+  position: relative;
   flex: 1;
-  padding-top: calc(48px + env(safe-area-inset-top));
-  display: flex;
-  width: 100vw;
   overflow: hidden;
-  will-change: transform;
+  padding-top: calc(48px + env(safe-area-inset-top));
 }
 
 .panel {
-  flex: 0 0 100vw;
+  position: absolute;
+  top: calc(48px + env(safe-area-inset-top));
+  left: 0;
+  width: 100%;
+  height: calc(100dvh - 48px - env(safe-area-inset-top));
   padding: 16px;
-  min-height: calc(100dvh - 48px - env(safe-area-inset-top));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
 }
 
-.panels.animating {
-  transition: transform 0.25s ease;
+.panel.active {
+  transform: translateX(0);
+}
+
+.panel.prev {
+  transform: translateX(-100%);
 }
 
 /* ── Token setup ─────────────────────────────────────────────────────────────*/
