@@ -8,8 +8,9 @@ const GITHUB_API = `https://api.github.com/repos/${NOTE_OWNER}/${NOTE_REPO}/issu
 
 const TAB_NAMES = ['form', 'notes', 'report'];
 let currentTabIndex = 0;
-let notesLoaded  = false;
-let reportLoaded = false;
+let notesLoaded   = false;
+let notesLoading  = false;
+let reportLoaded  = false;
 
 function switchTab(name) {
   const idx = TAB_NAMES.indexOf(name);
@@ -25,7 +26,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   currentTabIndex = idx;
 
-  if (name === 'notes'  && !notesLoaded)  { notesLoaded  = true; loadNotes(); }
+  if (name === 'notes'  && !notesLoaded && !notesLoading) { loadNotes(); }
   if (name === 'report' && !reportLoaded) { reportLoaded = true; loadReport(); }
 }
 
@@ -567,9 +568,30 @@ function buildNoteItem(issue) {
   return item;
 }
 
+const NOTES_CACHE_KEY = 'mobile_notes_cache';
+
+function renderNoteItems(c, issues) {
+  c.innerHTML = '';
+  if (!issues.length) { c.innerHTML = '<p class="placeholder">No notes in the last 2 hours</p>'; return; }
+  issues.forEach(issue => c.appendChild(buildNoteItem(issue)));
+}
+
 async function loadNotes() {
+  notesLoading = true;
   const c = document.getElementById('notes-container');
-  c.innerHTML = '<p class="placeholder">Loading...</p>';
+
+  // Show cached notes immediately (even stale) while fetching fresh data
+  let hasCached = false;
+  try {
+    const cached = JSON.parse(localStorage.getItem(NOTES_CACHE_KEY));
+    if (cached && cached.items) {
+      renderNoteItems(c, cached.items);
+      hasCached = true;
+    }
+  } catch (_) {}
+
+  if (!hasCached) c.innerHTML = '<p class="placeholder">Loading...</p>';
+
   try {
     const res = await fetch(
       `${GITHUB_API}?labels=note&state=open&per_page=20&sort=created&direction=desc`,
@@ -577,15 +599,16 @@ async function loadNotes() {
     );
     if (!res.ok) throw new Error(`${res.status}`);
     const issues = await res.json();
-    // Filter to issues created within the last 2 hours
     const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
     const now = Date.now();
     const recent = issues.filter(issue => now - new Date(issue.created_at).getTime() <= TWO_HOURS_MS);
-    c.innerHTML = '';
-    if (!recent.length) { c.innerHTML = '<p class="placeholder">No notes in the last 2 hours</p>'; return; }
-    recent.forEach(issue => c.appendChild(buildNoteItem(issue)));
+    localStorage.setItem(NOTES_CACHE_KEY, JSON.stringify({ ts: now, items: recent }));
+    renderNoteItems(c, recent);
+    notesLoaded  = true;
+    notesLoading = false;
   } catch (err) {
-    c.innerHTML = `<p class="error-msg">読み込み失敗: ${err.message}</p>`;
+    notesLoading = false;
+    if (!hasCached) c.innerHTML = `<p class="error-msg">読み込み失敗: ${err.message}</p>`;
   }
 }
 
@@ -593,7 +616,7 @@ async function loadNotes() {
 
 async function init() {
   if (!getToken()) { renderTokenSetup(); return; }
-  await pullSync();
+  pullSync(); // fire and forget — form renders immediately without waiting for sync
   renderForm();
 }
 
