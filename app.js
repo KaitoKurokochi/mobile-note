@@ -72,6 +72,50 @@ function guessLabel(section) {
   return matched;
 }
 
+// ── Label-specific templates ──────────────────────────────────────────────────
+
+function isBookLabel(label) {
+  return !!(label && label.toLowerCase().includes('book'));
+}
+
+function isVideoLabel(label) {
+  return !!(label && (label.toLowerCase().includes('video') || label.toLowerCase().includes('entertainment')));
+}
+
+const BOOKS_DONE_TEMPLATE = 'タイトル: \n著者: \n評価: \nジャンル: \n感想: \n';
+const BOOKS_TODO_TEMPLATE  = 'タイトル: \n著者: \nメモ: \n';
+const BOOKS_TEMPLATES = [BOOKS_DONE_TEMPLATE, BOOKS_TODO_TEMPLATE];
+
+const VIDEO_DONE_TEMPLATE = 'タイトル: \n制作/監督: \nジャンル: \n評価: \n感想: \n';
+const VIDEO_TODO_TEMPLATE  = 'タイトル: \nメモ: \n';
+const VIDEO_TEMPLATES = [VIDEO_DONE_TEMPLATE, VIDEO_TODO_TEMPLATE];
+
+const ALL_TEMPLATES = [...BOOKS_TEMPLATES, ...VIDEO_TEMPLATES];
+
+function getBookTemplate() {
+  return (selectedRoles.has('Todo') || selectedRoles.has('Want to do'))
+    ? BOOKS_TODO_TEMPLATE : BOOKS_DONE_TEMPLATE;
+}
+
+function getVideoTemplate() {
+  return (selectedRoles.has('Todo') || selectedRoles.has('Want to do'))
+    ? VIDEO_TODO_TEMPLATE : VIDEO_DONE_TEMPLATE;
+}
+
+function updateNoteTemplate() {
+  const textarea = document.getElementById('note-input');
+  if (!textarea) return;
+  if (isBookLabel(selectedLabel)) {
+    const tpl = getBookTemplate();
+    if (!textarea.value.trim() || ALL_TEMPLATES.includes(textarea.value)) textarea.value = tpl;
+  } else if (isVideoLabel(selectedLabel)) {
+    const tpl = getVideoTemplate();
+    if (!textarea.value.trim() || ALL_TEMPLATES.includes(textarea.value)) textarea.value = tpl;
+  } else {
+    if (ALL_TEMPLATES.includes(textarea.value)) textarea.value = '';
+  }
+}
+
 // Select a label pill in the form UI by label name
 function selectLabelPill(name) {
   selectedLabel = name;
@@ -185,6 +229,7 @@ function renderForm() {
     pill.addEventListener('click', () => {
       selectedLabel = l;
       labelRow.querySelectorAll('.label-pill').forEach(p => p.classList.toggle('selected', p.textContent === l));
+      updateNoteTemplate();
     });
     labelRow.insertBefore(pill, labelRow.querySelector('.label-add-btn'));
   }
@@ -353,6 +398,7 @@ function renderForm() {
         selectedRoles.add(key);
         pill.classList.add('selected');
       }
+      updateNoteTemplate();
     });
     roleRow.appendChild(pill);
   });
