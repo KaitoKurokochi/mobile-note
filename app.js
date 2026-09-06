@@ -670,6 +670,10 @@ async function init() {
   if (!getToken()) { renderTokenSetup(); return; }
   pullSync(); // fire and forget — form renders immediately without waiting for sync
   renderForm();
+  // Preload notes and report in the background so tabs open instantly
+  loadNotes();
+  reportLoaded = true; // prevent switchTab from triggering a second load
+  loadReport();
 }
 
 init();
