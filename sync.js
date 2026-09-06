@@ -18,7 +18,7 @@ const DEFAULT_ROLES  = [
   { key: 'Memo',       icon: '📝' },
   { key: 'Todo',       icon: '🔲' },
   { key: 'Idea',       icon: '💡' },
-  { key: 'Want to do', icon: '⭐' },
+  { key: 'Journal',    icon: '📓' },
   { key: 'Question',   icon: '❓' },
   { key: 'Done',       icon: '✅' },
 ];

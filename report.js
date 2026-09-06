@@ -233,7 +233,7 @@ async function renderStatusReport(container) {
           const md = await fetchAgentFile(path);
           const status = extractStatusSection(md);
           if (!status) return null;
-          return { name, status };
+          return { name, status, domainKey: path.split('/')[0] };
         } catch (_) {
           return null;
         }
@@ -247,11 +247,11 @@ async function renderStatusReport(container) {
       empty.textContent = 'No status report available';
       section.appendChild(empty);
     } else {
-      valid.forEach(({ name, status }) => {
+      valid.forEach(({ name, status, domainKey }) => {
         const { wrapper, body } = buildDomainCard(name, status, autoExpandNames);
 
         const idxOffset = reportMentionItems.length;
-        const { html, items } = markdownToHtml(status);
+        const { html, items } = markdownToHtml(status, domainKey);
         reportMentionItems = reportMentionItems.concat(items);
 
         body.innerHTML = html;
@@ -313,7 +313,7 @@ function extractSourceLabel(text) {
   return m ? m[1].trim() : null;
 }
 
-function markdownToHtml(md) {
+function markdownToHtml(md, domainKey) {
   const lines = md.split('\n');
 
   // ── Pass 1: parse into token objects ───────────────────────────────────────
@@ -400,8 +400,8 @@ function markdownToHtml(md) {
       const checkSourceLabel = extractSourceLabel(t.text);
       // Use top-level section for label guessing so Phase: items map back to their parent label
       const itemSection = currentSection.startsWith('Phase:') ? currentTopSection : currentSection;
-      items.push({ title: t.text, section: itemSection, sourceLabel: checkSourceLabel });
-      console.debug('[mobile-note] item pushed:', { title: t.text, section: itemSection, sourceLabel: checkSourceLabel });
+      items.push({ title: t.text, section: itemSection, sourceLabel: checkSourceLabel, domainKey });
+      console.debug('[mobile-note] item pushed:', { title: t.text, section: itemSection, sourceLabel: checkSourceLabel, domainKey });
       const doneClass = t.checked ? ' mr-item-done' : '';
       html += `<div class="mr-item${doneClass}" data-idx="${idx++}"><div class="mr-item-header"><span class="mr-item-text">${esc(t.text)}</span></div>`;
       openItem = true;
@@ -409,8 +409,8 @@ function markdownToHtml(md) {
       closeItem();
       const itemSourceLabel = extractSourceLabel(t.text);
       const itemSection = currentSection.startsWith('Phase:') ? currentTopSection : currentSection;
-      items.push({ title: t.text, section: itemSection, sourceLabel: itemSourceLabel });
-      console.debug('[mobile-note] item pushed:', { title: t.text, section: itemSection, sourceLabel: itemSourceLabel });
+      items.push({ title: t.text, section: itemSection, sourceLabel: itemSourceLabel, domainKey });
+      console.debug('[mobile-note] item pushed:', { title: t.text, section: itemSection, sourceLabel: itemSourceLabel, domainKey });
       html += `<div class="mr-item" data-idx="${idx++}"><div class="mr-item-header"><span class="mr-item-text">${esc(t.text)}</span></div>`;
       openItem = true;
     } else if (t.type === 'detail' && openItem) {

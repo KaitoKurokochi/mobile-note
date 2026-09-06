@@ -57,19 +57,28 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 let currentMention = null;
 
+// Explicit overrides for domain keys that don't match label names even after normalisation.
+// e.g. the agent_meta domain folder is labelled "agent" in localStorage.
+const DOMAIN_LABEL_OVERRIDE = {
+  agent_meta: 'agent',
+};
+
 // Match a section name to a label in localStorage (case-insensitive, ignoring emoji/symbols)
 function guessLabel(section) {
   if (!section) return null;
   const labels = getLabels();
-  // Exact match first
+  // Check explicit overrides first (e.g. agent_meta → agent)
+  if (DOMAIN_LABEL_OVERRIDE[section]) {
+    const found = labels.find(l => l === DOMAIN_LABEL_OVERRIDE[section]);
+    if (found) return found;
+  }
+  // Exact match
   if (labels.includes(section)) return section;
   // Normalise: strip non-alphanumeric characters (emoji, spaces, underscores, symbols)
   // and lowercase so that "🔬 Research"→"research", "🦁 Lions IS"→"lionsis",
   // "Lions_IS"→"lionsis" all match each other.
   const norm = s => s.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  const matched = labels.find(l => norm(l) === norm(section)) || null;
-  console.debug('[mobile-note] guessLabel:', { section, labels, norm_section: norm(section), matched });
-  return matched;
+  return labels.find(l => norm(l) === norm(section)) || null;
 }
 
 // ── Label-specific templates ──────────────────────────────────────────────────
@@ -93,12 +102,12 @@ const VIDEO_TEMPLATES = [VIDEO_DONE_TEMPLATE, VIDEO_TODO_TEMPLATE];
 const ALL_TEMPLATES = [...BOOKS_TEMPLATES, ...VIDEO_TEMPLATES];
 
 function getBookTemplate() {
-  return (selectedRoles.has('Todo') || selectedRoles.has('Want to do'))
+  return (selectedRoles.has('Todo') || selectedRoles.has('Journal'))
     ? BOOKS_TODO_TEMPLATE : BOOKS_DONE_TEMPLATE;
 }
 
 function getVideoTemplate() {
-  return (selectedRoles.has('Todo') || selectedRoles.has('Want to do'))
+  return (selectedRoles.has('Todo') || selectedRoles.has('Journal'))
     ? VIDEO_TODO_TEMPLATE : VIDEO_DONE_TEMPLATE;
 }
 
@@ -125,18 +134,15 @@ function selectLabelPill(name) {
     return;
   }
   labelRow.querySelectorAll('.label-pill').forEach(p => {
-    const match = p.textContent.trim() === name;
-    p.classList.toggle('selected', match);
+    p.classList.toggle('selected', p.textContent.trim() === name);
   });
-  console.debug('[mobile-note] selectLabelPill:', name);
 }
 
 function setMention(item) {
   currentMention = item;
   renderMentionBadge();
-  // sourceLabel (from "(#NNN, label_key)" in Others section) takes priority over section name
-  const labelCandidate = item.sourceLabel || item.section;
-  console.debug('[mobile-note] setMention:', { item, labelCandidate });
+  // sourceLabel > domainKey > section name (domainKey maps report domain to its label)
+  const labelCandidate = item.sourceLabel || item.domainKey || item.section;
   const matched = guessLabel(labelCandidate);
   if (matched) {
     selectLabelPill(matched);
