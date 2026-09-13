@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-13
+
+### Fixed
+- Include closed issues when loading notes (state=all instead of state=open) (#817)
+- Allow saving a note with empty body when the Done role is selected (#816)
+
+### Added
+- Manual refresh button on the Notes panel
+
+## [1.3.0] - 2026-09-07
+
+### Fixed
+- Auto-select label from report tab mentions via domainKey
+
+### Added
+- Preload notes and report on app open for instant tab switching
+
 ## [1.2.5] - 2026-08-02
 
 ### Fixed
