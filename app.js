@@ -624,7 +624,7 @@ const NOTES_CACHE_KEY = 'mobile_notes_cache';
 
 function renderNoteItems(c, issues) {
   c.innerHTML = '';
-  if (!issues.length) { c.innerHTML = '<p class="placeholder">No notes in the last 2 hours</p>'; return; }
+  if (!issues.length) { c.innerHTML = '<p class="placeholder">No notes yet</p>'; return; }
   issues.forEach(issue => c.appendChild(buildNoteItem(issue)));
 }
 
@@ -646,16 +646,17 @@ async function loadNotes() {
 
   try {
     const res = await fetch(
-      `${GITHUB_API}?labels=note&state=open&per_page=20&sort=created&direction=desc`,
+      `${GITHUB_API}?labels=note&state=all&per_page=20&sort=created&direction=desc`,
       { headers: { 'Authorization': `Bearer ${getToken()}`, 'Accept': 'application/vnd.github+json' } }
     );
     if (!res.ok) throw new Error(`${res.status}`);
-    const issues = await res.json();
-    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
-    const now = Date.now();
-    const recent = issues.filter(issue => now - new Date(issue.created_at).getTime() <= TWO_HOURS_MS);
-    localStorage.setItem(NOTES_CACHE_KEY, JSON.stringify({ ts: now, items: recent }));
-    renderNoteItems(c, recent);
+    const allIssues = await res.json();
+    const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+    const issues = allIssues
+      .filter(i => new Date(i.created_at).getTime() >= cutoff)
+      .slice(0, 10);
+    localStorage.setItem(NOTES_CACHE_KEY, JSON.stringify({ ts: Date.now(), items: issues }));
+    renderNoteItems(c, issues);
     notesLoaded  = true;
     notesLoading = false;
   } catch (err) {
@@ -663,6 +664,16 @@ async function loadNotes() {
     if (!hasCached) c.innerHTML = `<p class="error-msg">読み込み失敗: ${err.message}</p>`;
   }
 }
+
+// ── Notes refresh button ──────────────────────────────────────────────────────
+
+document.getElementById('notes-refresh-btn').addEventListener('click', () => {
+  if (notesLoading) return;
+  const btn = document.getElementById('notes-refresh-btn');
+  btn.classList.add('spinning');
+  notesLoaded = false;
+  loadNotes().finally(() => btn.classList.remove('spinning'));
+});
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
