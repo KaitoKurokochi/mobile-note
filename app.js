@@ -1,7 +1,7 @@
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const NOTE_OWNER = 'KaitoKurokochi';
-const NOTE_REPO  = 'agent';
+const NOTE_REPO  = 'vault';
 const GITHUB_API = `https://api.github.com/repos/${NOTE_OWNER}/${NOTE_REPO}/issues`;
 
 // ── Tab navigation ────────────────────────────────────────────────────────────

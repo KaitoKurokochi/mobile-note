@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-09-20
+
+### Fixed
+- app.js's NOTE_REPO (GitHub Issues backend) now points at KaitoKurokochi/vault instead of the retired KaitoKurokochi/agent — same repo the data reads already use.
+
 ## [1.4.1] - 2026-09-20
 
 ### Fixed
