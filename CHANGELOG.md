@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-09-20
+
+### Fixed
+- report.js's HQ entry now reads HQ/note.md (renamed from agent_meta), DEFAULT_LABELS swaps 'Agent' for 'HQ', and the now-dead agent_meta label override in app.js is removed.
+
 ## [1.4.0] - 2026-09-20
 
 ### Changed
