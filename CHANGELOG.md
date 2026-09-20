@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-20
+
+### Changed
+- sync.js, report.js, location.js now read data files (sync.json, due_today.json,
+  selected_domains.json, note.md/status files, location_zones.json) from
+  KaitoKurokochi/vault instead of agent. GitHub Issues (note CRUD) stay on agent.
+
 ## [1.3.1] - 2026-09-13
 
 ### Fixed
