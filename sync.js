@@ -1,7 +1,7 @@
 // ── Sync: pull labels/roles from agent/my_home_page/runtime/sync.json ────────
 
 const SYNC_OWNER = 'KaitoKurokochi';
-const SYNC_REPO  = 'agent';
+const SYNC_REPO  = 'vault';
 const SYNC_FILE  = 'my_home_page/runtime/sync.json';
 const SYNC_API   = `https://api.github.com/repos/${SYNC_OWNER}/${SYNC_REPO}/contents/${SYNC_FILE}`;
 

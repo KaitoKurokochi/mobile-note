@@ -1,7 +1,7 @@
 // ── Report: fetch Due Today and Status Report from agent repo ─────────────────
 
 const REPORT_OWNER = 'KaitoKurokochi';
-const REPORT_REPO  = 'agent';
+const REPORT_REPO  = 'vault';
 
 
 let reportMentionItems = [];
