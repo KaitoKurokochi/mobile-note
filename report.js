@@ -103,7 +103,7 @@ const REPORT_DOMAINS = [
   ['video_content/note.md', 'Video Content'],
   ['general/note.md',       'General'],
   ['living/note.md',        'Living'],
-  ['agent_meta/note.md',    'Agent Meta'],
+  ['HQ/note.md',            'HQ'],
 ];
 
 async function fetchSelectedDomains() {

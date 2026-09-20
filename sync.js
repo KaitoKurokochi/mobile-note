@@ -12,7 +12,7 @@ const SYNC_SHA_KEY  = 'mypage_sync_sha';
 
 const DEFAULT_LABELS = [
   'Lions_IS', 'Books', 'Research', 'General', 'Softball',
-  'my_home_page', 'Football', 'Agent', 'video_content', 'Others', 'Baseball',
+  'my_home_page', 'Football', 'HQ', 'video_content', 'Others', 'Baseball',
 ];
 const DEFAULT_ROLES  = [
   { key: 'Memo',       icon: '📝' },

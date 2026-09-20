@@ -58,16 +58,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 let currentMention = null;
 
 // Explicit overrides for domain keys that don't match label names even after normalisation.
-// e.g. the agent_meta domain folder is labelled "agent" in localStorage.
-const DOMAIN_LABEL_OVERRIDE = {
-  agent_meta: 'agent',
-};
+const DOMAIN_LABEL_OVERRIDE = {};
 
 // Match a section name to a label in localStorage (case-insensitive, ignoring emoji/symbols)
 function guessLabel(section) {
   if (!section) return null;
   const labels = getLabels();
-  // Check explicit overrides first (e.g. agent_meta → agent)
+  // Check explicit overrides first
   if (DOMAIN_LABEL_OVERRIDE[section]) {
     const found = labels.find(l => l === DOMAIN_LABEL_OVERRIDE[section]);
     if (found) return found;
