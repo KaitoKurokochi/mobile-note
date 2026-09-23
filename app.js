@@ -419,7 +419,7 @@ function renderForm() {
     e.preventDefault();
     const text   = document.getElementById('note-input').value.trim();
     const status = document.getElementById('form-status');
-    if (!text || !selectedLabel) return;
+    if ((!text && !selectedRoles.has('Done')) || !selectedLabel) return;
 
     const btn = document.querySelector('.submit-btn');
     btn.disabled = true;
@@ -648,7 +648,7 @@ async function loadNotes() {
     );
     if (!res.ok) throw new Error(`${res.status}`);
     const allIssues = await res.json();
-    const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+    const cutoff = Date.now() - 5 * 60 * 60 * 1000;
     const issues = allIssues
       .filter(i => new Date(i.created_at).getTime() >= cutoff)
       .slice(0, 10);

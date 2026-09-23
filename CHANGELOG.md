@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-23
+
+### Fixed
+- Allow saving a note with empty body when the Done role is selected, matching my_home_page's note form (#890)
+
+### Changed
+- Extend the Notes panel's cutoff from 2h to 5h so recently created notes stay visible longer, matching my_home_page (#887)
+
 ## [1.4.2] - 2026-09-20
 
 ### Fixed
@@ -114,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Role selection changed to radio-button behavior
 - Report 403 error message and DEFAULT_LABELS update
 
-[Unreleased]: https://github.com/KaitoKurokochi/mobile-note/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/KaitoKurokochi/mobile-note/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/KaitoKurokochi/mobile-note/compare/v1.4.2...v1.5.0
 [1.1.0]: https://github.com/KaitoKurokochi/mobile-note/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/KaitoKurokochi/mobile-note/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/KaitoKurokochi/mobile-note/compare/v1.0.1...v1.0.2
